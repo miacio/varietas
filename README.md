@@ -5,7 +5,7 @@ Experimental business logic variants
 Registering an object based on the registration method allows the object to call it through a string
 
 ``` go
-package varietas_test
+package dynamic_test
 
 import (
 	"fmt"

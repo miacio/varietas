@@ -1,4 +1,4 @@
-package varietas_test
+package dynamic_test
 
 import (
 	"fmt"
