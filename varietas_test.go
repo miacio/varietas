@@ -2,13 +2,13 @@ package varietas_test
 
 import (
 	"fmt"
-	"reflect"
 	"testing"
 
-	"github.com/miacio/varietas"
+	"github.com/miacio/varietas/dynamic"
 )
 
 type Test struct {
+	Host string
 }
 
 func (t *Test) Hello(message string) string {
@@ -16,17 +16,43 @@ func (t *Test) Hello(message string) string {
 	return "hello" + message
 }
 
-func TestV001(t *testing.T) {
-	c := varietas.Context{}
-	tes := Test{}
-	c.Register("test", &tes)
+func (t *Test) Goo() {
+	fmt.Println("goo")
+}
 
-	params := []reflect.Value{reflect.ValueOf("hello")}
-	result, err := c.Call("test", "Hello", params)
+func TestV001(t *testing.T) {
+	tes := Test{
+		Host: "host",
+	}
+	dynamic.Register("test", &tes)
+
+	// params := []reflect.Value{reflect.ValueOf("hello")}
+	result, err := dynamic.Call("test", "Goo", nil)
 	if err != nil {
 		// fmt.Println(result)
 		fmt.Printf("call method fail: %v", err)
 	}
 	fmt.Println(result)
 
+	methods := dynamic.GetMethods("test")
+	fmt.Println(methods)
+}
+
+func TestV002(t *testing.T) {
+	tes := Test{
+		Host: "host",
+	}
+	ctx := dynamic.New()
+	ctx.Register("test", &tes)
+
+	// params := []reflect.Value{reflect.ValueOf("hello")}
+	result, err := ctx.Call("test", "Goo", nil)
+	if err != nil {
+		// fmt.Println(result)
+		fmt.Printf("call method fail: %v", err)
+	}
+	fmt.Println(result)
+
+	methods := ctx.GetMethods("test")
+	fmt.Println(methods)
 }
