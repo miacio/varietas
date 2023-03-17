@@ -5,6 +5,12 @@ import (
 	"reflect"
 )
 
+// MethodMap
+type MethodMap map[string]reflect.Value
+
+// ClassesMethodMap
+type ClassesMethodMap map[string]MethodMap
+
 type context struct {
 	classesMethodMap ClassesMethodMap
 }
@@ -21,6 +27,7 @@ func (c *context) paramCheck() {
 	}
 }
 
+// Register
 func (c *context) Register(name string, class any) (int, error) {
 	c.paramCheck()
 

@@ -1,7 +1,10 @@
 # varietas
 Experimental business logic variants
 
-# dynamic
+## fls
+File operation module of operating system paradigm
+
+## dynamic
 Registering an object based on the registration method allows the object to call it through a string
 
 ``` go
@@ -28,24 +31,6 @@ func (t *Test) Goo() {
 }
 
 func TestV001(t *testing.T) {
-	tes := Test{
-		Host: "host",
-	}
-	dynamic.Register("test", &tes)
-
-	// params := []reflect.Value{reflect.ValueOf("hello")}
-	result, err := dynamic.Call("test", "Goo", nil)
-	if err != nil {
-		// fmt.Println(result)
-		fmt.Printf("call method fail: %v", err)
-	}
-	fmt.Println(result)
-
-	methods := dynamic.GetMethods("test")
-	fmt.Println(methods)
-}
-
-func TestV002(t *testing.T) {
 	tes := Test{
 		Host: "host",
 	}
