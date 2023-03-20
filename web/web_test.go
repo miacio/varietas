@@ -2,14 +2,22 @@ package web_test
 
 import (
 	"context"
+	"crypto/md5"
+	"fmt"
+	"io"
 	"log"
+	"math"
 	"net/http"
+	"net/url"
+	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"testing"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/miacio/varietas/web"
 )
 
@@ -21,6 +29,14 @@ func (*defaultCtr) Execute(c *gin.Engine) {
 	c.GET("/test", func(ctx *gin.Context) {
 		ctx.JSONP(http.StatusOK, gin.H{"message": "success"})
 	})
+}
+
+type fileUploadCtr struct{}
+
+var FileUploadCtr web.Router = (*fileUploadCtr)(nil)
+
+func (*fileUploadCtr) Execute(c *gin.Engine) {
+	c.POST("/chunkFile", web.ChunkFile)
 }
 
 func TestWeb001(t *testing.T) {
@@ -38,7 +54,7 @@ func TestWeb002(t *testing.T) {
 	defer stop()
 
 	w := web.New(gin.Default())
-	w.Register(DefaultCtr)
+	w.Register(DefaultCtr, FileUploadCtr)
 	w.Prepare()
 
 	srv := &http.Server{
@@ -65,4 +81,65 @@ func TestWeb002(t *testing.T) {
 
 	log.Println("Server exiting")
 
+}
+
+func TestFileSplitUpload(t *testing.T) {
+	filePath := "C://Users/18773/Desktop/jdk8-alpine.tar"
+
+	fileInfo, err := os.Stat(filePath)
+	if err != nil {
+		log.Fatalf("file stat fail: %v\n", err)
+		return
+	}
+
+	const chunkSize = 1 << (10 * 2) * 30
+
+	num := math.Ceil(float64(fileInfo.Size()) / float64(chunkSize))
+
+	fi, err := os.OpenFile(filePath, os.O_RDONLY, os.ModePerm)
+	if err != nil {
+		log.Fatalf("open file fail: %v\n", err)
+		return
+	}
+
+	fileKeyMap := make(map[string][]byte, 0)
+	fileKeys := make([]string, 0)
+
+	file := make([]byte, chunkSize)
+	for i := 1; i <= int(num); i++ {
+		fi.Seek((int64(i)-1)*chunkSize, 0)
+		if len(file) > int(fileInfo.Size()-(int64(i)-1)*chunkSize) {
+			file = make([]byte, fileInfo.Size()-(int64(i)-1)*chunkSize)
+		}
+		fi.Read(file)
+
+		key := fmt.Sprintf("%x", md5.Sum(file))
+		fileKeyMap[key] = file
+		fileKeys = append(fileKeys, key)
+	}
+
+	fileId := uuid.NewString()
+	fileName := "jdk8-alpine.tar"
+
+	for _, key := range fileKeys {
+		data := url.Values{
+			"fileKeys": fileKeys,
+		}
+
+		data.Set("fileId", fileId)
+		data.Set("fileName", fileName)
+		data.Set("fileKey", key)
+		data.Set("file", string(fileKeyMap[key]))
+
+		cl := &http.Client{}
+		res, err := cl.Post("http://127.0.0.1:8080/chunkFile", "multipart/form-data", strings.NewReader(data.Encode()))
+
+		if err != nil {
+			log.Fatalf("http post fail: %v", err)
+			return
+		}
+		defer res.Body.Close()
+		msg, _ := io.ReadAll(res.Body)
+		fmt.Println(string(msg))
+	}
 }
