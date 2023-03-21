@@ -37,7 +37,7 @@ type fileUploadCtr struct{}
 var FileUploadCtr web.Router = (*fileUploadCtr)(nil)
 
 func (*fileUploadCtr) Execute(c *gin.Engine) {
-	c.POST("/chunkFile", web.ChunkFile)
+	c.POST("/chunkUploadFile", web.ChunkUploadFile)
 }
 
 // cd web dir
@@ -91,7 +91,7 @@ func TestChunkFileUploadServer(t *testing.T) {
 // you need Ctrl+C close the method
 func TestChunkFileUploadClient(t *testing.T) {
 	// your client file path
-	filePath := ""
+	filePath := "C://Users/SnaroChrisXiao/Desktop/开发资料.zip"
 	fileName := filepath.Base(filePath)
 
 	fileInfo, err := os.Stat(filePath)
@@ -110,9 +110,9 @@ func TestChunkFileUploadClient(t *testing.T) {
 		return
 	}
 
-	fileKeyMap := make(map[string][]byte, 0)
-	fileKeys := make([]string, 0)
+	fileId := uuid.NewString()
 
+	fileKeys := make([]string, 0)
 	for i := 1; i <= int(num); i++ {
 		file := make([]byte, chunkSize)
 		fi.Seek((int64(i)-1)*chunkSize, 0)
@@ -122,23 +122,21 @@ func TestChunkFileUploadClient(t *testing.T) {
 		fi.Read(file)
 
 		key := fmt.Sprintf("%x", md5.Sum(file))
-		fileKeyMap[key] = file
+
 		fileKeys = append(fileKeys, key)
-	}
 
-	fileId := uuid.NewString()
-
-	for _, key := range fileKeys {
 		req := web.ChunkFileRequest{
-			FileId:   fileId,
-			FileName: fileName,
-			FileKey:  key,
-			FileKeys: fileKeys,
-			File:     fileKeyMap[key],
+			FileId:    fileId,
+			FileName:  fileName,
+			FileIndex: i,
+			FileCount: int(num),
+			FileKey:   key,
+			FileKeys:  fileKeys,
+			File:      file,
 		}
 		body, _ := json.Marshal(req)
 
-		res, err := http.Post("http://127.0.0.1:8080/chunkFile", "application/json", bytes.NewBuffer(body))
+		res, err := http.Post("http://127.0.0.1:8080/chunkUploadFile", "application/json", bytes.NewBuffer(body))
 
 		if err != nil {
 			log.Fatalf("http post fail: %v", err)
@@ -148,4 +146,5 @@ func TestChunkFileUploadClient(t *testing.T) {
 		msg, _ := io.ReadAll(res.Body)
 		fmt.Println(string(msg))
 	}
+
 }
