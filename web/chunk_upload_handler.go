@@ -113,15 +113,15 @@ func ChunkUploadFile(ctx *gin.Context) {
 		return
 	}
 
-	_, err := cf.SaveUploadedFile("./temp", "./uploads/"+cf.FileName)
+	tempFolder, err := cf.SaveUploadedFile("./temp", "./uploads/"+cf.FileName)
 	if err != nil {
 		ctx.JSON(http.StatusServiceUnavailable, gin.H{"code": "503", "msg": "bad save upload file", "err": err.Error()})
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{"code": "200", "msg": "success"})
-	// if tempFolder != "" {
-	// 	defer func(tempFolder string) {
-	// 		os.RemoveAll(tempFolder)
-	// 	}(tempFolder)
-	// }
+	if tempFolder != "" {
+		defer func(tempFolder string) {
+			os.RemoveAll(tempFolder)
+		}(tempFolder)
+	}
 }
