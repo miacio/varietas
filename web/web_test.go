@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"testing"
 	"time"
@@ -41,13 +42,13 @@ func (*fileUploadCtr) Execute(c *gin.Engine) {
 
 func TestWeb001(t *testing.T) {
 	w := web.New(gin.Default())
-	w.Register(DefaultCtr)
+	w.Register(DefaultCtr, FileUploadCtr)
 	w.Prepare()
 	w.Run(":8080")
 }
 
 // cd web dir
-// go test-v -run TestWeb002
+// go test -v -run TestWeb002
 // you need Ctrl+C close the method
 func TestWeb002(t *testing.T) {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
@@ -80,11 +81,11 @@ func TestWeb002(t *testing.T) {
 	}
 
 	log.Println("Server exiting")
-
 }
 
 func TestFileSplitUpload(t *testing.T) {
-	filePath := "C://Users/18773/Desktop/jdk8-alpine.tar"
+	filePath := "C://Users/18773/Desktop/systemFile.zip"
+	fileName := filepath.Base(filePath)
 
 	fileInfo, err := os.Stat(filePath)
 	if err != nil {
@@ -119,7 +120,6 @@ func TestFileSplitUpload(t *testing.T) {
 	}
 
 	fileId := uuid.NewString()
-	fileName := "jdk8-alpine.tar"
 
 	for _, key := range fileKeys {
 		req := web.ChunkFileRequest{

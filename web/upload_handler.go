@@ -4,7 +4,6 @@ import (
 	"crypto/md5"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -118,8 +117,7 @@ func ChunkFile(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"code": "200", "msg": "success"})
 	if tempFolder != "" {
 		defer func(tempFolder string) {
-			err = os.RemoveAll(tempFolder)
-			log.Fatalf("remove fail: %v", err)
+			os.RemoveAll(tempFolder)
 		}(tempFolder)
 	}
 }
