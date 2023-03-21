@@ -1,7 +1,6 @@
 package web
 
 import (
-	"crypto/md5"
 	"errors"
 	"fmt"
 	"net/http"
@@ -9,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/gin-gonic/gin"
+	"github.com/miacio/varietas/util"
 )
 
 type ChunkFileRequest struct {
@@ -30,7 +30,7 @@ func (cf *ChunkFileRequest) BindingForm(ctx *gin.Context) error {
 }
 
 func (cf *ChunkFileRequest) md5() error {
-	hash := fmt.Sprintf("%x", md5.Sum(cf.File))
+	hash := util.MD5(cf.File)
 	if hash != cf.FileKey {
 		return errors.New("current file slice key error")
 	}

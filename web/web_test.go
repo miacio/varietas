@@ -3,7 +3,6 @@ package web_test
 import (
 	"bytes"
 	"context"
-	"crypto/md5"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -19,6 +18,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/miacio/varietas/util"
 	"github.com/miacio/varietas/web"
 )
 
@@ -121,7 +121,7 @@ func TestChunkFileUploadClient(t *testing.T) {
 		}
 		fi.Read(file)
 
-		key := fmt.Sprintf("%x", md5.Sum(file))
+		key := util.MD5(file)
 
 		fileKeys = append(fileKeys, key)
 

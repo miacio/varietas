@@ -1,7 +1,9 @@
 package util
 
 import (
+	"crypto/md5"
 	"encoding/json"
+	"fmt"
 	"net"
 )
 
@@ -34,4 +36,9 @@ func IP() (string, error) {
 		}
 	}
 	return "", nil
+}
+
+// MD5
+func MD5(bt []byte) string {
+	return fmt.Sprintf("%x", md5.Sum(bt))
 }
