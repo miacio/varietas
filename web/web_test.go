@@ -1,17 +1,17 @@
 package web_test
 
 import (
+	"bytes"
 	"context"
 	"crypto/md5"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"math"
 	"net/http"
-	"net/url"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 	"testing"
 	"time"
@@ -105,8 +105,8 @@ func TestFileSplitUpload(t *testing.T) {
 	fileKeyMap := make(map[string][]byte, 0)
 	fileKeys := make([]string, 0)
 
-	file := make([]byte, chunkSize)
 	for i := 1; i <= int(num); i++ {
+		file := make([]byte, chunkSize)
 		fi.Seek((int64(i)-1)*chunkSize, 0)
 		if len(file) > int(fileInfo.Size()-(int64(i)-1)*chunkSize) {
 			file = make([]byte, fileInfo.Size()-(int64(i)-1)*chunkSize)
@@ -122,17 +122,16 @@ func TestFileSplitUpload(t *testing.T) {
 	fileName := "jdk8-alpine.tar"
 
 	for _, key := range fileKeys {
-		data := url.Values{
-			"fileKeys": fileKeys,
+		req := web.ChunkFileRequest{
+			FileId:   fileId,
+			FileName: fileName,
+			FileKey:  key,
+			FileKeys: fileKeys,
+			File:     fileKeyMap[key],
 		}
+		body, _ := json.Marshal(req)
 
-		data.Set("fileId", fileId)
-		data.Set("fileName", fileName)
-		data.Set("fileKey", key)
-		data.Set("file", string(fileKeyMap[key]))
-
-		cl := &http.Client{}
-		res, err := cl.Post("http://127.0.0.1:8080/chunkFile", "multipart/form-data", strings.NewReader(data.Encode()))
+		res, err := http.Post("http://127.0.0.1:8080/chunkFile", "application/json", bytes.NewBuffer(body))
 
 		if err != nil {
 			log.Fatalf("http post fail: %v", err)

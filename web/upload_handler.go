@@ -4,8 +4,7 @@ import (
 	"crypto/md5"
 	"errors"
 	"fmt"
-	"io"
-	"mime/multipart"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -18,69 +17,70 @@ type ChunkFileRequest struct {
 	FileName string   `json:"fileName"` // file name
 	FileKeys []string `json:"fileKeys"` // file slice all key md5
 	FileKey  string   `json:"fileKey"`  // file now key to md5 - if server read the slice to md5 eq key not eq then fail
-
-	File *multipart.FileHeader `json:"file"` // now file
+	File     []byte   `json:"file"`     // now file
 
 	ctx *gin.Context // ctx
 }
 
 func (cf *ChunkFileRequest) BindingForm(c *gin.Context) error {
-	cf.FileId = c.PostForm("fileId")
-	cf.FileName = c.PostForm("fileName")
-	cf.FileKeys = c.PostFormArray("fileKeys")
-	cf.FileKey = c.PostForm("fileKey")
-	cf.ctx = c
-	upFile, err := c.FormFile("file")
-
-	if err != nil {
+	if err := c.ShouldBind(cf); err != nil {
 		return err
 	}
-	cf.File = upFile
+
+	cf.ctx = c
 	return cf.md5()
 }
 
 func (cf *ChunkFileRequest) md5() error {
-	muFile, err := cf.File.Open()
-	if err != nil {
-		return err
-	}
-	defer muFile.Close()
-	bt, err := io.ReadAll(muFile)
-	if err != nil {
-		return err
-	}
-	hash := fmt.Sprintf("%x", md5.Sum(bt))
+	fmt.Println(cf.FileKey)
+	hash := fmt.Sprintf("%x", md5.Sum(cf.File))
+	fmt.Println(hash)
 	if hash != cf.FileKey {
 		return errors.New("current file slice key error")
 	}
 	return nil
 }
 
-func (cf *ChunkFileRequest) SaveUploadedFile(tempPath, path string) error {
+func (cf *ChunkFileRequest) SaveUploadedFile(tempPath, path string) (string, error) {
 	tempFolder := filepath.Join(tempPath, cf.FileId)
 
 	_, err := os.Stat(tempFolder)
 	if os.IsNotExist(err) {
 		err := os.MkdirAll(tempFolder, os.ModePerm)
 		if err != nil {
-			return err
+			return "", err
 		}
 	}
 
-	if err := cf.ctx.SaveUploadedFile(cf.File, filepath.Join(tempFolder, cf.FileKey)); err != nil {
-		return err
+	out, err := os.Create(filepath.Join(tempFolder, cf.FileKey))
+	if err != nil {
+		return "", err
+	}
+	defer out.Close()
+	if _, err := out.Write(cf.File); err != nil {
+		return "", err
 	}
 
 	for _, fileKey := range cf.FileKeys {
 		tempFile := filepath.Join(tempFolder, fileKey)
 		if _, err := os.Stat(tempFile); err != nil {
-			return nil
+			return "", nil
+		}
+	}
+
+	base := filepath.Dir(path)
+	if _, err := os.Stat(base); err != nil {
+		if os.IsNotExist(err) {
+			err := os.MkdirAll(base, os.ModePerm)
+			if err != nil {
+				return "", err
+			}
 		}
 	}
 
 	file, err := os.OpenFile(path, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0664)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	defer file.Close()
@@ -89,12 +89,12 @@ func (cf *ChunkFileRequest) SaveUploadedFile(tempPath, path string) error {
 		tempFile := filepath.Join(tempFolder, fileKey)
 		bt, err := os.ReadFile(tempFile)
 		if err != nil {
-			return err
+			return "", err
 		}
 		file.Write(bt)
 	}
 
-	return os.RemoveAll(tempFolder)
+	return tempFolder, nil
 }
 
 // param: fileId
@@ -110,10 +110,16 @@ func ChunkFile(c *gin.Context) {
 		return
 	}
 
-	if err := cf.SaveUploadedFile("./temp", "./uploads/"+cf.FileName); err != nil {
+	tempFolder, err := cf.SaveUploadedFile("./temp", "./uploads/"+cf.FileName)
+	if err != nil {
 		c.JSON(http.StatusServiceUnavailable, gin.H{"code": "503", "msg": "bad save upload file", "err": err.Error()})
 		return
 	}
-
 	c.JSON(http.StatusOK, gin.H{"code": "200", "msg": "success"})
+	if tempFolder != "" {
+		defer func(tempFolder string) {
+			err = os.RemoveAll(tempFolder)
+			log.Fatalf("remove fail: %v", err)
+		}(tempFolder)
+	}
 }
