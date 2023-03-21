@@ -40,6 +40,9 @@ func (*fileUploadCtr) Execute(c *gin.Engine) {
 	c.POST("/chunkFile", web.ChunkFile)
 }
 
+// cd web dir
+// go test -v -run TestWeb001
+// you need Ctrl+C close the method
 func TestWeb001(t *testing.T) {
 	w := web.New(gin.Default())
 	w.Register(DefaultCtr)
@@ -48,7 +51,7 @@ func TestWeb001(t *testing.T) {
 }
 
 // cd web dir
-// go test -v -run TestWeb002
+// go test -v -run TestChunkFileUploadServer
 // you need Ctrl+C close the method
 func TestChunkFileUploadServer(t *testing.T) {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
@@ -83,6 +86,9 @@ func TestChunkFileUploadServer(t *testing.T) {
 	log.Println("Server exiting")
 }
 
+// cd web dir
+// go test -v -run TestChunkFileUploadClient
+// you need Ctrl+C close the method
 func TestChunkFileUploadClient(t *testing.T) {
 	// your client file path
 	filePath := ""
