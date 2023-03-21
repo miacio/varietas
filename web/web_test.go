@@ -42,7 +42,7 @@ func (*fileUploadCtr) Execute(c *gin.Engine) {
 
 func TestWeb001(t *testing.T) {
 	w := web.New(gin.Default())
-	w.Register(DefaultCtr, FileUploadCtr)
+	w.Register(DefaultCtr)
 	w.Prepare()
 	w.Run(":8080")
 }
@@ -50,12 +50,12 @@ func TestWeb001(t *testing.T) {
 // cd web dir
 // go test -v -run TestWeb002
 // you need Ctrl+C close the method
-func TestWeb002(t *testing.T) {
+func TestChunkFileUploadServer(t *testing.T) {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
 	w := web.New(gin.Default())
-	w.Register(DefaultCtr, FileUploadCtr)
+	w.Register(FileUploadCtr)
 	w.Prepare()
 
 	srv := &http.Server{
@@ -83,8 +83,9 @@ func TestWeb002(t *testing.T) {
 	log.Println("Server exiting")
 }
 
-func TestFileSplitUpload(t *testing.T) {
-	filePath := "C://Users/18773/Desktop/systemFile.zip"
+func TestChunkFileUploadClient(t *testing.T) {
+	// your client file path
+	filePath := ""
 	fileName := filepath.Base(filePath)
 
 	fileInfo, err := os.Stat(filePath)
