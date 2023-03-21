@@ -17,16 +17,13 @@ type ChunkFileRequest struct {
 	FileKeys []string `json:"fileKeys"` // file slice all key md5
 	FileKey  string   `json:"fileKey"`  // file now key to md5 - if server read the slice to md5 eq key not eq then fail
 	File     []byte   `json:"file"`     // now file
-
-	ctx *gin.Context // ctx
 }
 
-func (cf *ChunkFileRequest) BindingForm(c *gin.Context) error {
-	if err := c.ShouldBind(cf); err != nil {
+func (cf *ChunkFileRequest) BindingForm(ctx *gin.Context) error {
+	if err := ctx.ShouldBind(cf); err != nil {
 		return err
 	}
 
-	cf.ctx = c
 	return cf.md5()
 }
 
@@ -101,20 +98,20 @@ func (cf *ChunkFileRequest) SaveUploadedFile(tempPath, path string) (string, err
 // param: fileKeys the file slice all file key md5
 // param: fileKey  now file slice key md5
 // param: file     now slice file
-func ChunkFile(c *gin.Context) {
+func ChunkFile(ctx *gin.Context) {
 	var cf ChunkFileRequest
 
-	if err := cf.BindingForm(c); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"code": "400", "msg": "bad file param", "err": err.Error()})
+	if err := cf.BindingForm(ctx); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"code": "400", "msg": "bad file param", "err": err.Error()})
 		return
 	}
 
 	tempFolder, err := cf.SaveUploadedFile("./temp", "./uploads/"+cf.FileName)
 	if err != nil {
-		c.JSON(http.StatusServiceUnavailable, gin.H{"code": "503", "msg": "bad save upload file", "err": err.Error()})
+		ctx.JSON(http.StatusServiceUnavailable, gin.H{"code": "503", "msg": "bad save upload file", "err": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"code": "200", "msg": "success"})
+	ctx.JSON(http.StatusOK, gin.H{"code": "200", "msg": "success"})
 	if tempFolder != "" {
 		defer func(tempFolder string) {
 			os.RemoveAll(tempFolder)
