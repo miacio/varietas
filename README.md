@@ -14,4 +14,11 @@ Based on the quick routing interface registration encapsulated by gin, this meth
 
 It ensures the practicality of the original gin and only adds a routing group operation to it
 
-see web.web_test.go
+see web.web_test.go -> TestWeb001
+
+### web unique capabilities
+High availability processing for large file uploads
+
+Ability to slice and upload large files
+
+see web.web_test.go -> TestChunkFileUploadServer and TestChunkFileUploadClient
