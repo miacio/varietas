@@ -22,3 +22,6 @@ High availability processing for large file uploads
 Ability to slice and upload large files
 
 see web.web_test.go -> TestChunkFileUploadServer and TestChunkFileUploadClient
+
+## dbtp
+Based database param type to golang struct package
