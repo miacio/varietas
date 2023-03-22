@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"reflect"
 	"strconv"
-	"strings"
 )
 
 func Object2Tag(obj any, tag string) (map[string]string, error) {
@@ -50,7 +49,7 @@ func Object2Tag(obj any, tag string) (map[string]string, error) {
 						for _, sv := range ss {
 							pv += sv + ","
 						}
-						if strings.HasSuffix(pv, ",") {
+						if len(pv) >= len(",") && pv[len(pv)-len(","):] == "," {
 							pv = pv[:len(pv)-1]
 						}
 						if len(pv) > 0 {
