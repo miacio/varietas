@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type context struct {
+type Engine struct {
 	*gin.Engine
 	routers Routers
 }
@@ -16,20 +16,20 @@ type Router interface {
 type Routers []Router
 
 // New
-func New(eng *gin.Engine) *context {
-	return &context{
+func New(eng *gin.Engine) *Engine {
+	return &Engine{
 		Engine:  eng,
 		routers: make(Routers, 0),
 	}
 }
 
 // RegisterController struct
-func (c *context) Register(routers ...Router) {
+func (c *Engine) Register(routers ...Router) {
 	c.routers = append(c.routers, routers...)
 }
 
 // Prepare execute this method to register a route before starting running
-func (c *context) Prepare() {
+func (c *Engine) Prepare() {
 	for _, router := range c.routers {
 		router.Execute(c.Engine)
 	}
