@@ -2,7 +2,6 @@ package web
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -57,7 +56,6 @@ func (cf *ChunkFileRequest) SaveUploadedFile(tempPath, path string) (string, err
 		return "", err
 	}
 
-	fmt.Println(cf.FileIndex, cf.FileCount)
 	if cf.FileIndex != cf.FileCount {
 		return "", nil
 	}
