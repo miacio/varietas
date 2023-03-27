@@ -16,6 +16,13 @@ It ensures the practicality of the original gin and only adds a routing group op
 
 see web.web_test.go -> TestWeb001
 
+## email
+add email tool
+
+because of [email](https://github.com/jordan-wright/email) package
+
+see email.email_test.go
+
 ### web unique capabilities
 High availability processing for large file uploads
 
