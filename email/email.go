@@ -406,7 +406,7 @@ func (e *Email) Send(addr string, a smtp.Auth) error {
 	}
 	// Check to make sure there is at least one recipient and one "From" address
 	if e.From == "" || len(to) == 0 {
-		return errors.New("Must specify at least one From address and one To address")
+		return ErrMustSpecifyMessage
 	}
 	sender, err := e.parseSender()
 	if err != nil {
@@ -435,7 +435,7 @@ func (e *Email) SendWithTLS(addr string, auth smtp.Auth, tlsConfig *tls.Config) 
 	}
 	// Check to make sure there is at least one recipient and one "From" address
 	if e.From == "" || len(to) == 0 {
-		return errors.New("Must specify at least one From address and one To address")
+		return ErrMustSpecifyMessage
 	}
 	sender, err := e.parseSender()
 	if err != nil {
@@ -507,7 +507,7 @@ func (e *Email) SendWithStartTLS(addr string, auth smtp.Auth, tlsConfig *tls.Con
 	}
 	// Check to make sure there is at least one recipient and one "From" address
 	if e.From == "" || len(to) == 0 {
-		return errors.New("Must specify at least one From address and one To address")
+		return ErrMustSpecifyMessage
 	}
 	sender, err := e.parseSender()
 	if err != nil {

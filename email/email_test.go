@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/rand"
 	"io"
-	"io/ioutil"
 	"mime"
 	"mime/multipart"
 	"mime/quotedprintable"
@@ -84,7 +83,7 @@ func TestEmailTextHtmlAttachment(t *testing.T) {
 	if err != nil {
 		t.Fatal("Could not read plain text component of message: ", err)
 	}
-	plainText, err := ioutil.ReadAll(part)
+	plainText, err := io.ReadAll(part)
 	if err != nil {
 		t.Fatal("Could not read plain text component of message: ", err)
 	}
@@ -205,7 +204,7 @@ func Test_base64Wrap(t *testing.T) {
 	var buf bytes.Buffer
 	base64Wrap(&buf, []byte(file))
 	if !bytes.Equal(buf.Bytes(), []byte(encoded)) {
-		t.Fatalf("Encoded file does not match expected: %#q != %#q", string(buf.Bytes()), encoded)
+		t.Fatalf("Encoded file does not match expected: %#q != %#q", buf.Bytes(), encoded)
 	}
 }
 
@@ -294,7 +293,7 @@ func Test_quotedPrintDecode(t *testing.T) {
 		"There are some wacky parts like =, and this input assumes UNIX line breaks so\r\n" +
 		"it can come out a little weird.  Also, we need to support unicode so here's a fish: 🐟\r\n")
 	qp := quotedprintable.NewReader(bytes.NewReader(text))
-	got, err := ioutil.ReadAll(qp)
+	got, err := io.ReadAll(qp)
 	if err != nil {
 		t.Fatal("quotePrintDecode: ", err)
 	}
@@ -311,6 +310,6 @@ func Benchmark_base64Wrap(b *testing.B) {
 		panic(err)
 	}
 	for i := 0; i <= b.N; i++ {
-		base64Wrap(ioutil.Discard, file)
+		base64Wrap(io.Discard, file)
 	}
 }
