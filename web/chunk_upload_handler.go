@@ -24,7 +24,6 @@ func (cf *ChunkFileRequest) BindingForm(ctx *gin.Context) error {
 	if err := ctx.ShouldBind(cf); err != nil {
 		return err
 	}
-
 	return cf.md5()
 }
 
@@ -36,6 +35,7 @@ func (cf *ChunkFileRequest) md5() error {
 	return nil
 }
 
+// SaveUploadedFile
 func (cf *ChunkFileRequest) SaveUploadedFile(tempPath, path string) (string, error) {
 	tempFolder := filepath.Join(tempPath, cf.FileId)
 

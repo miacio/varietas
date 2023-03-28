@@ -20,15 +20,17 @@ const (
 	MaxLineLength      = 76                             // MaxLineLength is the maximum line length pre RFC 2045
 	DefaultContentType = "text/plain; charset=us-ascii" // email.ContentType is email default Content-Type according to RFC 2045, section 5.2
 
-	StrReplyTo     = "Reply-To"
-	StrSubject     = "Subject"
-	StrTo          = "To"
-	StrCc          = "Cc"
-	StrBcc         = "Bcc"
-	StrFrom        = "From"
-	StrDate        = "Date"
-	StrMessageId   = "Message-Id"
-	StrMimeVersion = "MIME-Version"
+	StrContentType        = "Content-Type"
+	StrContentDisposition = "Content-Disposition"
+	StrReplyTo            = "Reply-To"
+	StrSubject            = "Subject"
+	StrTo                 = "To"
+	StrCc                 = "Cc"
+	StrBcc                = "Bcc"
+	StrFrom               = "From"
+	StrDate               = "Date"
+	StrMessageId          = "Message-Id"
+	StrMimeVersion        = "MIME-Version"
 )
 
 var (
@@ -113,7 +115,7 @@ func NewEmailFromReader(r io.Reader) (*Email, error) {
 		return em, err
 	}
 	for _, p := range ps {
-		headerContentType := p.header.Get("Content-Type")
+		headerContentType := p.header.Get(StrContentType)
 		if headerContentType == "" {
 			return em, ErrMissingContentType
 		}
@@ -122,8 +124,8 @@ func NewEmailFromReader(r io.Reader) (*Email, error) {
 			return em, err
 		}
 
-		if cd := p.header.Get("Content-Disposition"); cd != "" {
-			cd, params, err := mime.ParseMediaType(p.header.Get("Content-Disposition"))
+		if cd := p.header.Get(StrContentDisposition); cd != "" {
+			cd, params, err := mime.ParseMediaType(p.header.Get(StrContentDisposition))
 			if err != nil {
 				return em, err
 			}
@@ -272,16 +274,16 @@ func (e *Email) Bytes() ([]byte, error) {
 	}
 	switch {
 	case isMixed:
-		headers.Set("Content-Type", "multipart/mixed;\r\n boundary="+w.Boundary())
+		headers.Set(StrContentType, "multipart/mixed;\r\n boundary="+w.Boundary())
 	case isAlternative:
-		headers.Set("Content-Type", "multipart/alternative;\r\n boundary="+w.Boundary())
+		headers.Set(StrContentType, "multipart/alternative;\r\n boundary="+w.Boundary())
 	case isRelated:
-		headers.Set("Content-Type", "multipart/related;\r\n boundary="+w.Boundary())
+		headers.Set(StrContentType, "multipart/related;\r\n boundary="+w.Boundary())
 	case len(e.Html) > 0:
-		headers.Set("Content-Type", "text/html; charset=UTF-8")
+		headers.Set(StrContentType, "text/html; charset=UTF-8")
 		headers.Set("Content-Transfer-Encoding", "quoted-printable")
 	default:
-		headers.Set("Content-Type", "text/plain; charset=UTF-8")
+		headers.Set(StrContentType, "text/plain; charset=UTF-8")
 		headers.Set("Content-Transfer-Encoding", "quoted-printable")
 	}
 	headerToBytes(buff, headers)
@@ -298,7 +300,7 @@ func (e *Email) Bytes() ([]byte, error) {
 			// Create the multipart alternative part
 			subWriter = multipart.NewWriter(buff)
 			header := textproto.MIMEHeader{
-				"Content-Type": {"multipart/alternative;\r\n boundary=" + subWriter.Boundary()},
+				StrContentType: {"multipart/alternative;\r\n boundary=" + subWriter.Boundary()},
 			}
 			if _, err := w.CreatePart(header); err != nil {
 				return nil, err
@@ -319,7 +321,7 @@ func (e *Email) Bytes() ([]byte, error) {
 			if (isMixed || isAlternative) && len(htmlAttachments) > 0 {
 				relatedWriter = multipart.NewWriter(buff)
 				header := textproto.MIMEHeader{
-					"Content-Type": {"multipart/related;\r\n boundary=" + relatedWriter.Boundary()},
+					StrContentType: {"multipart/related;\r\n boundary=" + relatedWriter.Boundary()},
 				}
 				if _, err := subWriter.CreatePart(header); err != nil {
 					return nil, err

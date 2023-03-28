@@ -98,6 +98,7 @@ func base64Wrap(w io.Writer, b []byte) {
 	}
 }
 
+// handleAddressList
 func handleAddressList(v []string) []string {
 	res := []string{}
 	for _, a := range v {

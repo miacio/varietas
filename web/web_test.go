@@ -91,7 +91,7 @@ func TestChunkFileUploadServer(t *testing.T) {
 // you need Ctrl+C close the method
 func TestChunkFileUploadClient(t *testing.T) {
 	// your client file path
-	filePath := "C://Users/SnaroChrisXiao/Desktop/开发资料.zip"
+	filePath := "C://Users/SnaroChrisXiao/Desktop/xxx.zip"
 	fileName := filepath.Base(filePath)
 
 	fileInfo, err := os.Stat(filePath)

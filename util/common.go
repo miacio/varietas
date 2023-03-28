@@ -2,9 +2,12 @@ package util
 
 import (
 	"crypto/md5"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net"
+	"time"
 )
 
 // ToJSON
@@ -41,4 +44,41 @@ func IP() (string, error) {
 // MD5
 func MD5(bt []byte) string {
 	return fmt.Sprintf("%x", md5.Sum(bt))
+}
+
+// MD5File
+func MD5File(r io.Reader) string {
+	bf := make([]byte, 4096)
+	hashMd5 := md5.New()
+	for {
+		n, err := r.Read(bf)
+		if err == io.EOF && n == 0 {
+			break
+		}
+		if err != nil && err != io.EOF {
+			break
+		}
+		hashMd5.Write(bf[:n])
+	}
+	return fmt.Sprintf("%x", hashMd5.Sum(nil))
+}
+
+// Base64Encode
+func Base64Encode(data string) string {
+	return base64.URLEncoding.EncodeToString([]byte(data))
+}
+
+// Base64Decode
+func Base64Decode(data string) string {
+	b, err := base64.URLEncoding.DecodeString(data)
+	if err != nil {
+		return ""
+	}
+	return string(b)
+}
+
+// Now
+// zh - yyyy-MM-dd HH:mm:ss
+func Now() string {
+	return time.Now().Format("2006-01-02 15:04:05")
 }
