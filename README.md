@@ -1,9 +1,6 @@
 # varietas
 Experimental business logic variants
 
-## fls
-File operation module of operating system paradigm
-
 ## dynamic
 Registering an object based on the registration method allows the object to call it through a string
 
@@ -16,13 +13,6 @@ It ensures the practicality of the original gin and only adds a routing group op
 
 see web.web_test.go -> TestWeb001
 
-## email
-add email tool
-
-because of [email](https://github.com/jordan-wright/email) package
-
-see email.email_test.go
-
 ### web unique capabilities
 High availability processing for large file uploads
 
@@ -32,3 +22,10 @@ see web.web_test.go -> TestChunkFileUploadServer and TestChunkFileUploadClient
 
 ## dbtp
 Based database param type to golang struct package
+
+## email
+add email tool
+
+because of [email](https://github.com/jordan-wright/email) package
+
+see email.email_test.go
