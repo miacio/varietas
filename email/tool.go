@@ -57,7 +57,7 @@ func headerToBytes(buff *bytes.Buffer, header textproto.MIMEHeader) {
 			switch {
 			case field == "Content-Type" || field == "Content-Disposition":
 				buff.Write([]byte(subval))
-			case field == "From" || field == "To" || field == "Cc" || field == "Bcc":
+			case field == StrFrom || field == StrTo || field == StrCc || field == StrBcc || field == StrReplyTo:
 				participants := strings.Split(subval, ",")
 				for i, v := range participants {
 					addr, err := mail.ParseAddress(v)
