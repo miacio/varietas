@@ -738,7 +738,7 @@ TGV0J3MganVzdCBwcmV0ZW5kIHRoaXMgaXMgcmF3IEpQRUcgZGF0YS4=
 	}
 }
 
-func ExampleGmail() {
+func TestExampleGmail() {
 	e := New()
 	e.From = "Jordan Wright <test@gmail.com>"
 	e.To = []string{"test@example.com"}
@@ -750,7 +750,7 @@ func ExampleGmail() {
 	e.Send("smtp.gmail.com:587", smtp.PlainAuth("", e.From, "password123", "smtp.gmail.com"))
 }
 
-func ExampleAttach() {
+func TestExampleAttach() {
 	e := New()
 	e.AttachFile("test.txt")
 }
