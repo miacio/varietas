@@ -20,6 +20,8 @@ const (
 	MaxLineLength      = 76                             // MaxLineLength is the maximum line length pre RFC 2045
 	DefaultContentType = "text/plain; charset=us-ascii" // email.ContentType is email default Content-Type according to RFC 2045, section 5.2
 
+	StrFileNameParam = "filename" // mime request file name param
+
 	StrContentType        = "Content-Type"
 	StrContentDisposition = "Content-Disposition"
 	StrReplyTo            = "Reply-To"
@@ -129,7 +131,7 @@ func NewEmailFromReader(r io.Reader) (*Email, error) {
 			if err != nil {
 				return em, err
 			}
-			fileName, fileNameDefined := params["fileName"]
+			fileName, fileNameDefined := params[StrFileNameParam]
 			if cd == "attachment" || (cd == "inline" && fileNameDefined) {
 				_, err := em.Attach(bytes.NewReader(p.body), fileName, ct)
 				if err != nil {
@@ -153,6 +155,13 @@ func NewEmailFromReader(r io.Reader) (*Email, error) {
 // Required params include an io.Reader, the desired fileName for the attachment, and the Content-Type
 // the func will return the create Attachment for reference, as well as nil for the error, if successful.
 func (e *Email) Attach(r io.Reader, fileName string, contentType string) (a *Attachment, err error) {
+	return e.AttachWithHeaders(r, fileName, contentType, textproto.MIMEHeader{})
+}
+
+// AttachWithHeaders is used to attach content from an io.Reader to the email. Required parameters include an io.Reader,
+// the desired filename for the attachment, the Content-Type and the original MIME headers.
+// The function will return the created Attachment for reference, as well as nil for the error, if successful.
+func (e *Email) AttachWithHeaders(r io.Reader, fileName string, contentType string, headers textproto.MIMEHeader) (a *Attachment, err error) {
 	var buffer bytes.Buffer
 	if _, err = io.Copy(&buffer, r); err != nil {
 		return
@@ -160,7 +169,7 @@ func (e *Email) Attach(r io.Reader, fileName string, contentType string) (a *Att
 	at := &Attachment{
 		FileName:    fileName,
 		ContentType: contentType,
-		Header:      textproto.MIMEHeader{},
+		Header:      headers,
 		Content:     buffer.Bytes(),
 	}
 	e.Attachments = append(e.Attachments, at)
