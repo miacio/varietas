@@ -25,11 +25,11 @@ func FileIsDir(path string) (bool, error) {
 	return fileInfo.IsDir(), nil
 }
 
-// FolderIsNotExistThenMkdir
+// FolderNotExistMkdir
 // check path folder is exist, if not exist then mkdirall the path
 // else os.Stat(path) os.IsNotExist false, then return err, else return nil
 // so used the method then check this err == nil then success.
-func FolderIsNotExistThenMkdir(path string) error {
+func FolderNotExistMkdir(path string) error {
 	if _, err := os.Stat(path); err != nil {
 		if os.IsNotExist(err) {
 			return os.MkdirAll(path, os.ModePerm)

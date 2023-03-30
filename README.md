@@ -29,3 +29,28 @@ add email tool
 because of [email](https://github.com/jordan-wright/email) package
 
 see email.email_test.go
+
+## log
+add log package
+
+because of uber.zap package
+
+extremely simplified and fast build logs
+
+``` go
+import "github.com/miacio/varietas/log"
+
+func main() {
+    logParam := log.LoggerParam{
+        Path:       "./log", // you log write folder path
+        MaxSize:    256,
+        MaxBackups: 10,
+        MaxAge:     7,
+        Compress:   false,
+    }
+    
+    log := logParam.Default()
+
+    log.Infoln("init success")
+}
+```
