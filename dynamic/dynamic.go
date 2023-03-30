@@ -12,23 +12,22 @@ type MethodMap map[string]reflect.Value
 // ClassesMethodMap
 type ClassesMethodMap map[string]MethodMap
 
-// context
-type context struct {
+// Context
+type Context struct {
 	classesMethodMap ClassesMethodMap
 	classesLock      sync.Mutex
 }
 
 // New
-func New() *context {
-	return &context{
+func New() *Context {
+	return &Context{
 		classesMethodMap: make(ClassesMethodMap),
 	}
 }
 
 // register
-func (c *context) register(name string, class any) (int, error) {
+func (c *Context) register(name string, class any) (int, error) {
 	to := reflect.TypeOf(class)
-	fmt.Println(to.Kind())
 	if to.Kind() != reflect.Struct && to.Kind() != reflect.Pointer {
 		return 0, fmt.Errorf("the class type of kind is not a struct")
 	}
@@ -66,17 +65,17 @@ func (c *context) register(name string, class any) (int, error) {
 }
 
 // RegisterByName
-func (c *context) RegisterByName(name string, class any) (int, error) {
+func (c *Context) RegisterByName(name string, class any) (int, error) {
 	return c.register(name, class)
 }
 
 // RegisterByAny
-func (c *context) RegisterByAny(class any) (int, error) {
+func (c *Context) RegisterByAny(class any) (int, error) {
 	return c.register("", class)
 }
 
 // call
-func (c *context) call(name, method string, params []reflect.Value) ([]reflect.Value, error) {
+func (c *Context) call(name, method string, params []reflect.Value) ([]reflect.Value, error) {
 	methodMap, ok := c.classesMethodMap[name]
 	if !ok {
 		return nil, fmt.Errorf("the %s class does not exist", name)
@@ -91,17 +90,17 @@ func (c *context) call(name, method string, params []reflect.Value) ([]reflect.V
 }
 
 // CallByName
-func (c *context) CallByName(name, method string, params []reflect.Value) ([]reflect.Value, error) {
+func (c *Context) CallByName(name, method string, params []reflect.Value) ([]reflect.Value, error) {
 	return c.call(name, method, params)
 }
 
 // CallByAny
-func (c *context) CallByAny(class any, method string, params []reflect.Value) ([]reflect.Value, error) {
+func (c *Context) CallByAny(class any, method string, params []reflect.Value) ([]reflect.Value, error) {
 	name := reflect.TypeOf(class).String()
 	return c.call(name, method, params)
 }
 
-func (c *context) getMethods(name string) []string {
+func (c *Context) getMethods(name string) []string {
 	methodMap, ok := c.classesMethodMap[name]
 	if !ok {
 		return nil
@@ -114,12 +113,12 @@ func (c *context) getMethods(name string) []string {
 }
 
 // GetMethods
-func (c *context) GetMethodsByName(name string) []string {
+func (c *Context) GetMethodsByName(name string) []string {
 	return c.getMethods(name)
 }
 
 // GetMethodsByAny
-func (c *context) GetMethodsByAny(class any) []string {
+func (c *Context) GetMethodsByAny(class any) []string {
 	name := reflect.TypeOf(class).String()
 	return c.getMethods(name)
 }
