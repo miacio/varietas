@@ -54,3 +54,8 @@ func main() {
     log.Infoln("init success")
 }
 ```
+
+## util
+util package encapsulated some commonly used basic methods
+
+add slice stream logic methods
