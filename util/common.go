@@ -2,6 +2,7 @@ package util
 
 import (
 	"encoding/json"
+	"fmt"
 	"net"
 	"time"
 )
@@ -41,4 +42,18 @@ func IP() (string, error) {
 // zh - yyyy-MM-dd HH:mm:ss
 func Now() string {
 	return time.Now().Format("2006-01-02 15:04:05")
+}
+
+// PanicTrue
+func PanicTrue(guard bool, format string, params ...any) {
+	if guard {
+		panic(fmt.Sprintf(format, params...))
+	}
+}
+
+// PanicFalse
+func PanicFalse(guard bool, format string, params ...any) {
+	if !guard {
+		panic(fmt.Sprintf(format, params...))
+	}
 }
