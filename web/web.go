@@ -47,8 +47,9 @@ func (c *Engine) LoadHTMLFolders(folders []string, suffix string) {
 	for _, folder := range folders {
 		inFiles, err := util.FileFindAllFileChildren(folder, suffix)
 		if err != nil {
-			files = append(files, inFiles...)
+			continue
 		}
+		files = append(files, inFiles...)
 	}
 	files = util.SliceDistinct(files...)
 	if files != nil {
