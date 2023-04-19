@@ -1,6 +1,11 @@
 package util
 
-import "math/rand"
+import (
+	"math/rand"
+	"strings"
+
+	"github.com/google/uuid"
+)
 
 // RandString randomly generate a specified length string based on the given string
 func RandString(base string, n int) string {
@@ -9,4 +14,8 @@ func RandString(base string, n int) string {
 		b[i] = base[rand.Intn(len(base))]
 	}
 	return string(b)
+}
+
+func UID() string {
+	return strings.ToUpper(strings.ReplaceAll(uuid.New().String(), "-", ""))
 }
