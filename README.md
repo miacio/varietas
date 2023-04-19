@@ -59,3 +59,6 @@ func main() {
 util package encapsulated some commonly used basic methods
 
 add slice stream logic methods
+
+## mfs
+mfs package a workflow pattern method factory developed based on facet oriented thinking and communicated through context management
