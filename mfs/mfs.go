@@ -1,143 +1,89 @@
 package mfs
 
-import (
-	"errors"
-	"sync"
-)
+import "errors"
 
-// Context
-type Context struct {
-	TaskId string         // now task id
-	next   chan int       // ctx.Next method to chan
-	stop   bool           // ctx is stop
-	now    int            // now index
-	params map[string]any // context core message
-	err    error          // result err
+type TaskMethod struct {
+	TaskName   string // taskName
+	TaskMethod Method // TaskMethod
 }
 
-func (c *Context) Back(a ...int) {
-	if a == nil {
-		c.next <- c.now - 1
-	} else {
-		if a[0] < 0 {
-			a[0] = a[0] - a[0] - a[0]
-		}
-		c.next <- c.now - a[0]
+func (t *TaskMethod) Name() string {
+	return t.TaskName
+}
+
+func (t *TaskMethod) Runner(ctx *Context) {
+	t.TaskMethod(ctx)
+}
+
+func CreateMethod(name string, taskMethod func(ctx *Context)) TaskMethod {
+	return TaskMethod{
+		TaskName:   name,
+		TaskMethod: taskMethod,
 	}
 }
 
-func (c *Context) Next() {
-	c.next <- c.now + 1
-}
+type Method func(*Context)
 
-func (c *Context) Close(err error) error {
-	c.next <- -1
-	c.err = err
-	return err
-}
-
-func (c *Context) Stop() {
-	c.stop = true
-}
-
-func (c *Context) Set(key string, val any) {
-	c.params[key] = val
-}
-
-func (c *Context) Get(key string) any {
-	return c.params[key]
-}
-
-// Method
-type Method interface {
-	TaskId() string  // return this method name
-	Do(ctx *Context) // runner func
-}
-
-// MethodChain
-type MethodChain []Method
-
-func (m MethodChain) Length() int {
-	return len(m)
-}
+type MethodChain []TaskMethod
 
 type Factory struct {
-	ctx           *Context    // context
-	methods       MethodChain // factory method chain is method slice
-	appendMethods MethodChain // methods added when running the runner
-	runner        bool        // runner
-	wg            sync.WaitGroup
+	*Context
+	methodChain MethodChain // MethodChain
 }
 
-// GenerateFactory
-func GenerateFactory(name string) *Factory {
+func NewFactory() *Factory {
 	f := &Factory{
-		ctx: &Context{
-			next:   make(chan int, 1),
-			now:    0,
-			params: make(map[string]any, 0),
-			err:    nil,
-		},
-		methods: make([]Method, 0),
+		methodChain: make(MethodChain, 0),
 	}
-	f.ctx.next <- 0
+	ctx := &Context{
+		Factory: f,
+		params:  make(map[string]any, 0),
+		Now:     -1,
+	}
+	f.Context = ctx
 	return f
 }
 
-func (f *Factory) AppendMethods(methods ...Method) {
-	if f.runner {
-		f.appendMethods = append(f.appendMethods, methods...)
-		return
-	}
-	f.methods = append(f.methods, methods...)
+func (f *Factory) AddTaskMethod(taskMethods ...TaskMethod) {
+	f.methodChain = append(f.methodChain, taskMethods...)
 }
 
-func (f *Factory) appendRunner() {
-	if f.runner {
-		return
+func (f *Factory) DropTaskByName(name string) {
+	newMethodChain := make(MethodChain, 0)
+	for _, method := range f.methodChain {
+		if method.Name() == name {
+			continue
+		}
+		newMethodChain = append(newMethodChain, method)
 	}
-	f.methods = append(f.methods, f.appendMethods...)
+	f.methodChain = newMethodChain
 }
 
-// Factory.Do runner
-func (f *Factory) do() {
-	if f.methods == nil || f.methods.Length() == 0 {
-		f.ctx.err = errors.New("factory in methods is empty")
-		return
-	}
-	f.runner = true
-	next := <-f.ctx.next
-	f.ctx.now = next
-	if next >= f.methods.Length() || next < 0 {
-		f.runner = false
-		f.appendRunner()
-		f.wg.Done()
-		return
-	}
-	f.ctx.TaskId = f.methods[next].TaskId()
-	f.methods[next].Do(f.ctx)
-	f.do()
-}
-
-func (f *Factory) Do() {
-	f.wg.Add(1)
+func (f *Factory) Run() {
+	f.next = make(chan int)
 	go func() {
-		f.do()
+		defer close(f.next)
+		f.wg.Add(1)
+		for {
+			select {
+			case ext := <-f.next:
+				if f.methodChain == nil {
+					f.err = errors.New("method chain is empty")
+					f.wg.Done()
+					return
+				}
+				if ext < 0 || ext > len(f.methodChain) {
+					f.wg.Done()
+					return
+				} else {
+					f.Now = ext
+					f.TaskName = f.methodChain[ext].TaskName
+					go f.methodChain[ext].TaskMethod(f.Context)
+				}
+			}
+		}
 	}()
-}
-
-// EndMessage
-func (f *Factory) EndMessage() (string, error) {
+	f.Now = 0
+	f.next <- 0
 	f.wg.Wait()
-	return f.ctx.TaskId, f.ctx.err
-}
-
-// Next
-func (f *Factory) Next() bool {
-	if f.ctx.stop {
-		f.ctx.next <- f.ctx.now + 1
-		f.ctx.stop = false
-		return true
-	}
-	return false
 }
