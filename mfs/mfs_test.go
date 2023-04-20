@@ -21,10 +21,12 @@ func TestFactory(t *testing.T) {
 
 	f.AddTaskMethod(mfs.CreateMethod("task a", func(ctx *mfs.Context) {
 		fmt.Println("level 1")
+		msg := util.RandString("abcde", 1)
+		ctx.Set("msg", msg)
 		ctx.Next()
 	}), mfs.CreateMethod("task b", func(ctx *mfs.Context) {
 		fmt.Println("level 2")
-		msg := util.RandString("abcde", 1)
+		msg := ctx.Get("msg").(string)
 		switch msg {
 		case "a":
 			ctx.Back()
@@ -45,9 +47,9 @@ func TestFactory(t *testing.T) {
 		ctx.Back(2)
 	}), mfs.CreateMethod("task d", func(ctx *mfs.Context) {
 		fmt.Println("level 4")
-		ctx.Back(2)
+		ctx.Back(3)
 	}))
-	f.Run()
+	f.Excute()
 	if taskName, err := f.Error(); err != nil {
 		t.Fatal(taskName, err)
 	}
