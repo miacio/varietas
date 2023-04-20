@@ -4,72 +4,51 @@ import (
 	"errors"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/miacio/varietas/mfs"
 	"github.com/miacio/varietas/util"
 )
 
-type TaskA struct{}
-
-func (*TaskA) Do(ctx *mfs.Context) {
-	fmt.Println("level 1")
-	msg := util.RandString("abcd", 1)
-	ctx.Set("now", msg)
-	ctx.Next()
+func Start(f *mfs.Factory) {
+	time.Sleep(3 * time.Second)
+	fmt.Println("sleep 3 runner")
+	f.Start()
 }
 
-func (*TaskA) TaskId() string {
-	return "taskA"
-}
+func TestFactory(t *testing.T) {
+	f := mfs.NewFactory()
 
-type TaskB struct{}
-
-func (*TaskB) Do(ctx *mfs.Context) {
-	fmt.Println("level 2")
-	msg := ctx.Get("now").(string)
-	switch msg {
-	case "a":
-		ctx.Back()
-	case "b":
+	f.AddTaskMethod(mfs.CreateMethod("task a", func(ctx *mfs.Context) {
+		fmt.Println("level 1")
 		ctx.Next()
-	case "c":
-		ctx.Close(errors.New("因为出现了C导致程序失败"))
-	case "d":
-		fmt.Println("需要通过f去激活下一步到3")
-		ctx.Stop()
-	}
-}
-
-func (*TaskB) TaskId() string {
-	return "taskB"
-}
-
-type TaskC struct{}
-
-func (*TaskC) Do(ctx *mfs.Context) {
-	fmt.Println("level 3")
-	ctx.Back(-2)
-}
-
-func (*TaskC) TaskId() string {
-	return "taskC"
-}
-
-func TestMfs(t *testing.T) {
-	f := mfs.GenerateFactory(util.UID())
-	a := TaskA{}
-	b := TaskB{}
-	c := TaskC{}
-	f.AppendMethods(&a, &b, &c)
-	f.Do()
-	go func() {
-		for {
-			if f.Next() {
-				fmt.Println("通过F激活了一次调用")
-			}
+	}), mfs.CreateMethod("task b", func(ctx *mfs.Context) {
+		fmt.Println("level 2")
+		msg := util.RandString("abcde", 1)
+		switch msg {
+		case "a":
+			ctx.Back()
+		case "b":
+			ctx.Next()
+		case "c":
+			go Start(f)
+			fmt.Println("need f.Start runner")
+			ctx.Stop()
+			ctx.Next()
+		case "d":
+			ctx.Next(2)
+		case "e":
+			ctx.Close(errors.New("msg is e close"))
 		}
-	}()
-	if taskId, err := f.EndMessage(); err != nil {
-		t.Fatal(taskId, err)
+	}), mfs.CreateMethod("task c", func(ctx *mfs.Context) {
+		fmt.Println("level 3")
+		ctx.Back(2)
+	}), mfs.CreateMethod("task d", func(ctx *mfs.Context) {
+		fmt.Println("level 4")
+		ctx.Back(2)
+	}))
+	f.Run()
+	if taskName, err := f.Error(); err != nil {
+		t.Fatal(taskName, err)
 	}
 }

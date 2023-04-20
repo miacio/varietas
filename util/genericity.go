@@ -29,3 +29,11 @@ func Max[T NumberGenericity](a, b T) T {
 	}
 	return b
 }
+
+// PositiveInt
+func PositiveInt[T IntGenericity](val T) T {
+	if val < 0 {
+		return val * -1
+	}
+	return val
+}
